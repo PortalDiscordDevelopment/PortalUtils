@@ -22,6 +22,9 @@ class Logging(commands.Cog):
         jl, clr = (
             ("Joined", "green") if self.bot.get_guild(guild.id) else ("Left", "red")
         )
+        owner = guild.owner
+        if not owner:
+            owner = await self.bot.fetch_user(guild.owner_id)
         await log.send(
             embed=discord.Embed(
                 title=f"{jl} {guild}",
