@@ -37,8 +37,8 @@ class Bot(DPyUtils.Bot):
 
     async def start(self, *args, **kwargs):
         self.load_extension("jishaku")
-        self.load_extension("logging")
-        self.load_extension("help")
+        self.load_extension("PortalUtils.logging")
+        self.load_extension("PortalUtils.helpc")
         if "data.db" in os.listdir():
             async with aiosqlite.connect(
                 "data.db"
