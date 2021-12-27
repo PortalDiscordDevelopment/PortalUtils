@@ -31,9 +31,9 @@ class Logging(commands.Cog):
                 color=getattr(discord.Color, "dark_" + clr)(),
                 description=f"""
 Guild ID: `{guild.id}`
-Owner: `{owner}` (`{owner.id}`)
+Owner: `{owner}` (`{owner.id}`){f'''
 Humans: `{len([m for m in guild.members if not m.bot])}`
-Bots: `{len([m for m in guild.members if m.bot])}`
+Bots: `{len([m for m in guild.members if m.bot])}`''' if self.bot.intents.members else ''}
 Total Guilds: `{len(self.bot.guilds)}`""",
             )
         )
