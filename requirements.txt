@@ -1,0 +1,5 @@
+aiosqlite
+git+https://github.com/iDevision/enhanced-discord.py
+git+https://github.com/Clari-7744/DPyUtils
+git+https://github.com/Clari-7744/jishaku@rtfd
+python-dotenv
