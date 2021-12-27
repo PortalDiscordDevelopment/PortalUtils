@@ -27,9 +27,10 @@ class Logging(commands.Cog):
             owner = await self.bot.fetch_user(guild.owner_id)
         await log.send(
             embed=discord.Embed(
-                title=f"{jl} {guild}",
-                color=getattr(discord.Color, "dark_" + clr)(),
+                title=f"{jl} Server",
+                color=getattr(discord.Color, clr)(),
                 description=f"""
+Guild Name: `{guild}`
 Guild ID: `{guild.id}`
 Owner: `{owner}` (`{owner.id}`){f'''
 Humans: `{len([m for m in guild.members if not m.bot])}`
@@ -46,8 +47,8 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             return
         if ctx.command.qualified_name.split()[0] == "jishaku":
             return
-        ran = ctx.message.content.split()
-        cmd, args = ran[0], ran[1:]
+        cmd = ctx.prefix+' '.join((*ctx.invoked_parents, ctx.invoked_with))
+        args = ctx.message.content.replace(cmd, '').strip().split()
         sig = [
             a.split("=")[0]
             for a in ctx.command.signature.replace("<", "")
@@ -62,7 +63,7 @@ Total Guilds: `{len(self.bot.guilds)}`""",
                 description=f"""
 User: `{ctx.author}` (`{ctx.author.id}`)
 Guild: `{ctx.guild}`{f" (`{ctx.guild.id}`)" if ctx.guild else ''}
-Channel: `{ctx.channel if not isinstance(ctx.channel, discord.DMChannel) else "DM"}` (`{ctx.channel.id}`)
+Channel: `{ctx.channel if not isinstance(ctx.channel, discord.DMChannel) else "DM or Slash-Only Context"}` (`{ctx.channel.id}`)
 Message: [`{ctx.message.id}`]({ctx.message.jump_url})
 Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, args))}`""",
                 color=discord.Color.dark_green(),
