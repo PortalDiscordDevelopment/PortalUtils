@@ -49,7 +49,11 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             return
         cmd = ctx.prefix+' '.join((*ctx.invoked_parents, ctx.invoked_with))
         args = [str(x) for x in ctx.args if not isinstance(x, (commands.Cog, commands.Context))]
-        args.append(''.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
+        c = ctx.message.content
+        for a in args:
+            c = c.replace(c.split()[0], '')
+        args.append(c)
+#       args.append(' '.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
         sig = [
             a.split("=")[0]
             for a in ctx.command.signature.replace("<", "")
