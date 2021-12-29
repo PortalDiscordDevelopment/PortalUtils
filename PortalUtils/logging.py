@@ -50,9 +50,7 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             return
         cmd = ctx.prefix + " ".join((*ctx.invoked_parents, ctx.invoked_with))
         args = [
-            str(x)
-            for x in ctx.args
-            if not isinstance(x, (commands.Cog, commands.Context))
+            x for x in ctx.args if not isinstance(x, (commands.Cog, commands.Context))
         ]
         c = ctx.message.content.replace(cmd, "").strip()
         for a in args:
@@ -60,12 +58,17 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         args.append(c.strip())
         #       args.append(' '.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
         sig = []
-        for (ind, (name, param)) in enumerate(ctx.command.params.items()):
+        params = {
+            k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")
+        }
+        argi = 0
+        for name, param in params:
             types = [str if param._annotation is inspect._empty else param._annotation]
             if ags := getattr(param._annotation, "__args__", None):
                 types = [x for x in ags if x.__name__ != "NoneType"]
-            if isinstance(ctx.args[ind], tuple(types)):
+            if isinstance(args[argi], tuple(types)):
                 sig.append(name)
+                argi += 1
         #        sig = [
         #            a.split("=")[0]
         #            for a in ctx.command.signature.replace("<", "")
@@ -82,7 +85,7 @@ User: `{ctx.author}` (`{ctx.author.id}`)
 Guild: `{ctx.guild}`{f" (`{ctx.guild.id}`)" if ctx.guild else ''}
 Channel: `{ctx.channel if not isinstance(ctx.channel, discord.DMChannel) else "DM or Slash-Only Context"}` (`{ctx.channel.id}`)
 Message: [`{ctx.message.id}`]({ctx.message.jump_url})
-Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, args))}`""",
+Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, args)))}`""",
                 color=discord.Color.dark_green(),
             )
         )
