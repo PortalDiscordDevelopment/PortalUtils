@@ -48,7 +48,8 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         if ctx.command.qualified_name.split()[0] == "jishaku":
             return
         cmd = ctx.prefix+' '.join((*ctx.invoked_parents, ctx.invoked_with))
-        args = ctx.message.content.replace(cmd, '').strip().split()
+        args = [x for x in ctx.args if not isinstance(x, (commands.Cog, commands.Context))]
+        args.append(''.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
         sig = [
             a.split("=")[0]
             for a in ctx.command.signature.replace("<", "")
