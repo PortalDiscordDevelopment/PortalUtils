@@ -1,3 +1,4 @@
+import inspect
 import discord
 import DPyUtils
 from discord.ext import commands
@@ -56,16 +57,23 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         c = ctx.message.content.replace(cmd, "").strip()
         for a in args:
             c = c.replace(c.split()[0], "")
-        args.append(c)
+        args.append(c.strip())
         #       args.append(' '.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
-        sig = [
-            a.split("=")[0]
-            for a in ctx.command.signature.replace("<", "")
-            .replace(">", "")
-            .replace("[", "")
-            .replace("]", "")
-            .split()
-        ]
+        sig = []
+        for (ind, (name, param)) in enumerate(ctx.command.params.items()):
+            types = [str if param._annotation is inspect._empty else param._annotation]
+            if ags := getattr(param._annotation, "__args__", None):
+                types = [x for x in ags if x.__name__ != "NoneType"]
+            if isinstance(ctx.args[ind], tuple(types)):
+                sig.append(name)
+        #        sig = [
+        #            a.split("=")[0]
+        #            for a in ctx.command.signature.replace("<", "")
+        #            .replace(">", "")
+        #            .replace("[", "")
+        #            .replace("]", "")
+        #            .split()
+        #        ]
         await log.send(
             embed=discord.Embed(
                 title="Command Ran",
