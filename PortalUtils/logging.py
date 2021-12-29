@@ -53,7 +53,7 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             for x in ctx.args
             if not isinstance(x, (commands.Cog, commands.Context))
         ]
-        c = ctx.message.content
+        c = ctx.message.content.replace(cmd, "").strip()
         for a in args:
             c = c.replace(c.split()[0], "")
         args.append(c)
