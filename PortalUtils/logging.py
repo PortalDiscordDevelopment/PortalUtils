@@ -62,7 +62,7 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")
         }
         argi = 0
-        for name, param in params:
+        for name, param in params.items():
             types = [str if param._annotation is inspect._empty else param._annotation]
             if ags := getattr(param._annotation, "__args__", None):
                 types = [x for x in ags if x.__name__ != "NoneType"]
