@@ -56,30 +56,26 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         for a in args:
             c = c.replace(c.split()[0], "")
         args.append(c.strip())
-        sig = []
         params = {
             k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")
         }
         argi = 0
-        npt = []
+        sig = []
+        newargs = []
         for name, param in params.items():
+            if argi >= len(args):
+                break
             types = [str if param.annotation is inspect._empty else param.annotation]
             if ags := getattr(param.annotation, "__args__", None):
                 types = [x for x in ags if x.__name__ != "NoneType"]
             types = tuple(types)
-            if isinstance(args[argi], types):
+            if isinstance(args[argi], types) and param.kind.numerator != 2:
                 sig.append(name)
-                argi += 1
-            npt.append((name, param, types))
-        argi = 0
-        newargs = []
-        for name, param, types in npt:
-            if param.kind.numerator != 2:
                 newargs.append(args[argi])
                 argi += 1
                 continue
             temp = []
-            while isinstance(args[argi], types):
+            while isinstance(args[argi], types) and argi < len(args):
                 temp.append(args[argi])
                 argi += 1
             newargs.append(" ".join(map(str, temp)))
