@@ -56,27 +56,33 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         for a in args:
             c = c.replace(c.split()[0], "")
         args.append(c.strip())
-        #       args.append(' '.join(ctx.message.content.replace(cmd, '').strip().split()[len(args):]))
         sig = []
         params = {
             k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")
         }
         argi = 0
+        npt = []
         for name, param in params.items():
-            types = [str if param._annotation is inspect._empty else param._annotation]
-            if ags := getattr(param._annotation, "__args__", None):
+            types = [str if param.annotation is inspect._empty else param.annotation]
+            if ags := getattr(param.annotation, "__args__", None):
                 types = [x for x in ags if x.__name__ != "NoneType"]
-            if isinstance(args[argi], tuple(types)):
+            types = tuple(types)
+            if isinstance(args[argi], types):
                 sig.append(name)
                 argi += 1
-        #        sig = [
-        #            a.split("=")[0]
-        #            for a in ctx.command.signature.replace("<", "")
-        #            .replace(">", "")
-        #            .replace("[", "")
-        #            .replace("]", "")
-        #            .split()
-        #        ]
+            npt.append((name, param, types))
+        argi = 0
+        newargs = []
+        for name, param, types in npt:
+            if param.kind.numerator != 2:
+                newargs.append(args[argi])
+                argi += 1
+                continue
+            temp = []
+            while isinstance(args[argi], types):
+                temp.append(args[argi])
+                argi += 1
+            newargs.append(" ".join(map(str, temp)))
         await log.send(
             embed=discord.Embed(
                 title="Command Ran",
@@ -85,7 +91,7 @@ User: `{ctx.author}` (`{ctx.author.id}`)
 Guild: `{ctx.guild}`{f" (`{ctx.guild.id}`)" if ctx.guild else ''}
 Channel: `{ctx.channel if not isinstance(ctx.channel, discord.DMChannel) else "DM or Slash-Only Context"}` (`{ctx.channel.id}`)
 Message: [`{ctx.message.id}`]({ctx.message.jump_url})
-Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, args)))}`""",
+Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`""",
                 color=discord.Color.dark_green(),
             )
         )
