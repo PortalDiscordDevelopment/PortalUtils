@@ -1,9 +1,17 @@
 import os
 from typing import Union
-import aiosqlite
+
 import aiohttp
+import aiosqlite
 import discord
 import DPyUtils
+import jishaku
+from discord.ext import commands
+
+from .tree import CommandTree
+
+for f in ["NO_UNDERSCORE", "HIDE", "FORCE_PAGINATOR"]:
+    setattr(jishaku.Flags, f, True)
 
 
 class Embed(discord.Embed):
@@ -11,10 +19,17 @@ class Embed(discord.Embed):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._footer = {"text": "\u00a9 2022 Portal Development. All rights reserved - /info"}
         self.color = self.color or self._default_color  # pylint: disable=no-member
 
 
-class Bot(DPyUtils.Bot):
+class EEmbed(Embed):
+    def __init__(self, **kwargs):
+        self._default_color = discord.Color.red()
+        super().__init__(**kwargs)
+
+
+class PortalBotMixin:
     def __init__(
         self,
         *args,
@@ -24,6 +39,7 @@ class Bot(DPyUtils.Bot):
         command_logs: int = 0,
         **kwargs,
     ):
+        kwargs.setdefault("tree_cls", CommandTree)
         super().__init__(*args, **kwargs)
         self.color: Union[discord.Color, int] = color
         self.error_logs = error_logs
@@ -33,16 +49,22 @@ class Bot(DPyUtils.Bot):
         self.db: aiosqlite.Connection
         self.session: aiohttp.ClientSession
         self.Embed: discord.Embed = Embed
-        self.Embed._default_color = self.color or discord.Embed.Empty
+        self.Embed._default_color = self.color
+        self.EEmbed = EEmbed
 
     async def start(self, *args, **kwargs):
-        self.load_extension("jishaku")
-        self.load_extension("PortalUtils.logging")
-        self.load_extension("PortalUtils.helpc")
-        if "data.db" in os.listdir():
-            async with aiosqlite.connect(
-                "data.db"
-            ) as db, aiohttp.ClientSession() as session:
+        await DPyUtils.load_extensions(
+            self,
+            directories=[],
+            extra_cogs=[
+                "jishaku",
+                "PortalUtils.logging",
+                "PortalUtils.helpc",
+                "DPyUtils.ContextEditor2",
+            ],
+        )
+        if "data.db" in os.listdir() and not hasattr(self, "db"):
+            async with aiosqlite.connect("data.db") as db, aiohttp.ClientSession() as session:
                 self.db = db
                 self.session = session
                 await super().start(*args, **kwargs)
@@ -57,20 +79,16 @@ class Bot(DPyUtils.Bot):
         schema = await (
             await self.db.execute(
                 "SELECT sql FROM sqlite_master"
-                + (
-                    " WHERE name IN ({})".format(
-                        ", ".join(f"'{table}'" for table in tables)
-                    )
-                    if tables
-                    else ""
-                )
+                + (" WHERE name IN ({})".format(", ".join(f"'{table}'" for table in tables)) if tables else "")
             )
         ).fetchall()
-        fmt = "\n".join(
-            [
-                "".join(x)
-                for x in schema
-                if any(x) and not x[0].startswith("sqlite_autoindex")
-            ]
-        )
+        fmt = "\n".join(["".join(x) for x in schema if any(x) and not x[0].startswith("sqlite_autoindex")])
         return f"```sql\n{fmt}```"
+
+
+class Bot(PortalBotMixin, commands.Bot):
+    pass
+
+
+class AutoShardedBot(PortalBotMixin, commands.AutoShardedBot):
+    pass

@@ -1,5 +1,6 @@
 from discord.ext import commands
-import DPyUtils
+
+from .bot import Bot
 
 
 class CustomMinimalHelp(commands.MinimalHelpCommand):
@@ -10,7 +11,7 @@ class CustomMinimalHelp(commands.MinimalHelpCommand):
         await self.context.send(embed=self.context.bot.Embed(description=desc))
 
 
-def setup(bot: DPyUtils.Bot):
+async def setup(bot: Bot):
     bot.help_command = CustomMinimalHelp(
         command_attrs={"name": "help"},
         verify_checks=False,

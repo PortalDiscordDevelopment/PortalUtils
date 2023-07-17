@@ -1,4 +1,5 @@
 import inspect
+
 import discord
 import DPyUtils
 from discord.ext import commands
@@ -20,9 +21,7 @@ class Logging(commands.Cog):
             self.bot.extra_events["on_guild_join"].remove(self.guild_logs)
             self.bot.extra_events["on_guild_remove"].remove(self.guild_logs)
             return
-        jl, clr = (
-            ("Joined", "green") if self.bot.get_guild(guild.id) else ("Left", "red")
-        )
+        jl, clr = ("Joined", "green") if self.bot.get_guild(guild.id) else ("Left", "red")
         owner = guild.owner
         if not owner:
             owner = await self.bot.fetch_user(guild.owner_id)
@@ -49,16 +48,12 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         if ctx.command.qualified_name.split()[0] == "jishaku":
             return
         cmd = ctx.prefix + " ".join((*ctx.invoked_parents, ctx.invoked_with))
-        args = [
-            x for x in ctx.args if not isinstance(x, (commands.Cog, commands.Context))
-        ]
+        args = [x for x in ctx.args if not isinstance(x, (commands.Cog, commands.Context))]
         c = ctx.message.content.replace(cmd, "").strip()
         for a in args:
             c = c.replace(c.split()[0], "")
         args.append(c.strip())
-        params = {
-            k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")
-        }
+        params = {k: v for k, v in ctx.command.params.items() if k not in ("self", "ctx")}
         argi = 0
         sig = []
         newargs = []
@@ -92,6 +87,10 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
             )
         )
 
+    @commands.Cog.listener("on_command_error")
+    async def error_logs(self, ctx, err):
+        print(ctx.channel, ctx.author, err)
 
-def setup(bot: DPyUtils.Bot):
-    bot.add_cog(Logging(bot))
+
+async def setup(bot: DPyUtils.Bot):
+    await bot.add_cog(Logging(bot))
