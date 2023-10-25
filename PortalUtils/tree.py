@@ -8,6 +8,7 @@ from DPyUtils import Interaction
 
 class CommandTree(CommandTree):
     async def on_error(self, interaction: Interaction, error: Exception):
+        await interaction.send("An error occured.")
         await interaction.send(error, ephemeral=True)
         if isinstance(error, CommandInvokeError):
             error = error.original
@@ -20,14 +21,16 @@ class CommandTree(CommandTree):
                 f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace}```py\n{tb}```"
             )
 
-    async def _call(self, interaction: Interaction) -> None:
-        defer = True
+    async def interaction_check(self, interaction: Interaction) -> None:
+        defer = False
         if (
             interaction.type == InteractionType.application_command
             and getattr(interaction.command, "type", AppCommandType.chat_input) == AppCommandType.chat_input
         ):
             command, options = self._get_app_command_options(interaction.data)
-            defer = command.extras.get("defer", True)
+            defer = command.extras.get("defer", False)
         if defer:
-            await interaction.response.defer(thinking=True)
-        await super()._call(interaction)
+            await interaction.response.defer(
+                thinking=True, ephemeral=True
+            )  # First followup ALWAYS matches state of defer!
+        return True
