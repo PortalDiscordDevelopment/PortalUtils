@@ -15,7 +15,7 @@ class CommandTree(CommandTree):
         tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
         print(tb)
         if isinstance(error, CheckFailure):
-            tb = f"{error.__name__.__module}.{error.__name__.__class__}: {error}"
+            tb = f"CheckFailure: {error}"
         if cid := getattr(interaction.client, "error_logs", 0):
             await interaction.client.get_channel(cid).send(
                 f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace}```py\n{tb}```"
