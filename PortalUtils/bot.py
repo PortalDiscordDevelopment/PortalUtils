@@ -3,10 +3,10 @@ from typing import Union
 
 import aiohttp
 import aiosqlite
-import discord
-import DPyUtils
 import jishaku
+from discord import Color, Embed
 from discord.ext import commands
+from DPyUtils import load_extensions
 
 from .tree import CommandTree
 
@@ -14,8 +14,8 @@ for f in ["NO_UNDERSCORE", "HIDE", "FORCE_PAGINATOR"]:
     setattr(jishaku.Flags, f, True)
 
 
-class Embed(discord.Embed):
-    _default_color: Union[discord.Color, int]
+class Embed(Embed):
+    _default_color: Union[Color, int]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -25,7 +25,7 @@ class Embed(discord.Embed):
 
 class EEmbed(Embed):
     def __init__(self, **kwargs):
-        self._default_color = discord.Color.red()
+        self._default_color = Color.red()
         super().__init__(**kwargs)
 
 
@@ -33,7 +33,7 @@ class PortalBotMixin:
     def __init__(
         self,
         *args,
-        color: Union[discord.Color, int] = None,
+        color: Union[Color, int] = None,
         error_logs: int = 0,
         guild_logs: int = 0,
         command_logs: int = 0,
@@ -41,19 +41,19 @@ class PortalBotMixin:
     ):
         kwargs.setdefault("tree_cls", CommandTree)
         super().__init__(*args, **kwargs)
-        self.color: Union[discord.Color, int] = color
+        self.color: Union[Color, int] = color
         self.error_logs = error_logs
         self.guild_logs = guild_logs
         self.command_logs = command_logs
 
         self.db: aiosqlite.Connection
         self.session: aiohttp.ClientSession
-        self.Embed: discord.Embed = Embed
+        self.Embed: Embed = Embed
         self.Embed._default_color = self.color
         self.EEmbed = EEmbed
 
     async def start(self, *args, **kwargs):
-        await DPyUtils.load_extensions(
+        await load_extensions(
             self,
             directories=[],
             extra_cogs=[

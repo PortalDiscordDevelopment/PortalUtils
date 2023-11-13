@@ -1,8 +1,0 @@
-aiohttp
-aiosqlite
-git+https://github.com/clari7744/discord.py
-git+https://github.com/clari7744/DPyUtils@newdpy
-git+https://github.com/clari7744/jishaku
-git+https://github.com/clari7744/postbin
-git+https://github.com/PortalDiscordDevelopment/PortalUtils
-python-dotenv

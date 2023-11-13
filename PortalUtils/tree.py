@@ -1,9 +1,8 @@
 import traceback
 
-from discord import AppCommandType, InteractionType
+from discord import AppCommandType, Interaction, InteractionType
 from discord.app_commands import CommandTree
 from discord.app_commands.errors import CheckFailure, CommandInvokeError
-from DPyUtils import Interaction
 
 
 class CommandTree(CommandTree):

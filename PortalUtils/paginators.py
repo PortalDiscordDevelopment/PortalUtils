@@ -1,16 +1,24 @@
-import discord
+from discord import (
+    ButtonStyle,
+    Embed,
+    Interaction,
+    Message,
+    SelectOption,
+    TextChannel,
+    ui,
+)
 
 
-class PaginatorButton(discord.ui.Button):
+class PaginatorButton(ui.Button):
     def __init__(self, f, **kwargs):
         super().__init__(**kwargs)
         self.f = f
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: Interaction):
         return await getattr(self.view.paginator, f"show_{self.f}_page")()
 
 
-class PaginatorButtons(discord.ui.View):
+class PaginatorButtons(ui.View):
     def __init__(self, paginator, **kwargs):
         self.paginator = paginator
         super().__init__(**kwargs)
@@ -21,12 +29,12 @@ class PaginatorButtons(discord.ui.View):
             ("⏭", "last", self.paginator.num_pages),
         ]
         for e, f, p in mapping:
-            self.add_item(PaginatorButton(f, label=p, emoji=e, style=discord.ButtonStyle.blurple))
+            self.add_item(PaginatorButton(f, label=p, emoji=e, style=ButtonStyle.blurple))
         self._children.insert(
             2,
-            discord.ui.Button(
+            ui.Button(
                 label=f"{self.paginator.current_page}/{len(self.paginator.pages)}",
-                style=discord.ButtonStyle.blurple,
+                style=ButtonStyle.blurple,
                 disabled=True,
             ),
         )
@@ -37,13 +45,13 @@ class PaginatorButtonsGoTo(PaginatorButtons):
         super().__init__(paginator, **kwargs)
         self.add_item(self.GoTo(self.paginator))
 
-    class GoTo(discord.ui.Select):
+    class GoTo(ui.Select):
         def __init__(self, paginator, **kwargs):
             self.paginator = paginator
-            options = [discord.SelectOption(label=str(i), value=i) for i in range(1, self.paginator.num_pages + 1)]
+            options = [SelectOption(label=str(i), value=i) for i in range(1, self.paginator.num_pages + 1)]
             super().__init__(placeholder="Go to page...", options=options, **kwargs)
 
-        async def callback(self, interaction: discord.Interaction):
+        async def callback(self, interaction: Interaction):
             await self.paginator.show_page(self.values[0])
 
 
@@ -59,7 +67,7 @@ class Paginator:
         self.current_page = 1
         self.max_len = max_len
         self.delimiter = delimiter
-        self.message: discord.Message
+        self.message: Message
         self.pages = [[]]
         self.is_embed: bool = False
 
@@ -86,7 +94,7 @@ class Paginator:
     async def show_last_page(self):
         await self.show_page(len(self.pages))
 
-    async def send_to(self, channel: discord.TextChannel):
+    async def send_to(self, channel: TextChannel):
         self.pages = [self.delimiter.join(page) for page in self.pages]
         self.message = await channel.send(content=self.delimiter.join(self.pages[0]), view=PaginatorButtons(self))
         return self.message
@@ -100,7 +108,7 @@ class EmbedPaginator(Paginator):
         delimiter: str = "\n",
         max_len: int = 4096,
         timeout: float = 180.0,
-        embed_cls: discord.Embed = discord.Embed,
+        embed_cls: Embed = Embed,
         embed_kwargs: dict = None,
     ):
         super().__init__(num_lines, delimiter=delimiter, max_len=max_len, timeout=timeout)
@@ -108,7 +116,7 @@ class EmbedPaginator(Paginator):
         self.embed_cls = embed_cls
         self.embed_kwargs = embed_kwargs or {}
 
-    async def send_to(self, channel: discord.TextChannel):
+    async def send_to(self, channel: TextChannel):
         self.pages = [self.embed_cls(description=self.delimiter.join(page), **self.embed_kwargs) for page in self.pages]
         self.message = await channel.send(embed=self.pages[0])
         return self.message

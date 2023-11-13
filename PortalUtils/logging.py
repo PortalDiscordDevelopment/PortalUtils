@@ -1,8 +1,10 @@
 import inspect
 
-import discord
-import DPyUtils
+from discord import Color, DMChannel, Embed, Guild
 from discord.ext import commands
+from DPyUtils import Context
+
+from . import Bot
 
 
 class Logging(commands.Cog):
@@ -10,12 +12,12 @@ class Logging(commands.Cog):
     Logs bot stuff.
     """
 
-    def __init__(self, bot: DPyUtils.Bot):
+    def __init__(self, bot: Bot):
         self.bot = bot
 
     @commands.Cog.listener("on_guild_join")
     @commands.Cog.listener("on_guild_remove")
-    async def guild_logs(self, guild: discord.Guild):
+    async def guild_logs(self, guild: Guild):
         log = self.bot.get_channel(self.bot.guild_logs)
         if log is None:
             self.bot.extra_events["on_guild_join"].remove(self.guild_logs)
@@ -26,9 +28,9 @@ class Logging(commands.Cog):
         if not owner:
             owner = await self.bot.fetch_user(guild.owner_id)
         await log.send(
-            embed=discord.Embed(
+            embed=Embed(
                 title=f"{jl} Server",
-                color=getattr(discord.Color, clr)(),
+                color=getattr(Color, clr)(),
                 description=f"""
 Guild Name: `{guild}`
 Guild ID: `{guild.id}`
@@ -40,7 +42,7 @@ Total Guilds: `{len(self.bot.guilds)}`""",
         )
 
     @commands.Cog.listener("on_command")
-    async def command_logs(self, ctx: DPyUtils.Context):
+    async def command_logs(self, ctx: Context):
         log = self.bot.get_channel(self.bot.command_logs)
         if log is None:
             self.bot.extra_events["on_command"].remove(self.command_logs)
@@ -75,15 +77,15 @@ Total Guilds: `{len(self.bot.guilds)}`""",
                 argi += 1
             newargs.append(" ".join(map(str, temp)))
         await log.send(
-            embed=discord.Embed(
+            embed=Embed(
                 title="Command Ran",
                 description=f"""
 User: `{ctx.author}` (`{ctx.author.id}`)
 Guild: `{ctx.guild}`{f" (`{ctx.guild.id}`)" if ctx.guild else ''}
-Channel: `{ctx.channel if not isinstance(ctx.channel, discord.DMChannel) else "DM or Slash-Only Context"}` (`{ctx.channel.id}`)
+Channel: `{ctx.channel if not isinstance(ctx.channel, DMChannel) else "DM or Slash-Only Context"}` (`{ctx.channel.id}`)
 Message: [`{ctx.message.id}`]({ctx.message.jump_url})
 Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`""",
-                color=discord.Color.dark_green(),
+                color=Color.dark_green(),
             )
         )
 
@@ -92,5 +94,5 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
         print(ctx.channel, ctx.author, err)
 
 
-async def setup(bot: DPyUtils.Bot):
+async def setup(bot: Bot):
     await bot.add_cog(Logging(bot))
