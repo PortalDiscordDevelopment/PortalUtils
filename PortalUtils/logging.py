@@ -4,7 +4,7 @@ from discord import Color, DMChannel, Embed, Guild
 from discord.ext import commands
 from DPyUtils import Context
 
-from . import Bot
+from .bot import Bot
 
 
 class Logging(commands.Cog):

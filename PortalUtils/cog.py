@@ -3,7 +3,7 @@ from typing import List
 from discord import Interaction
 from discord.ext.commands import Cog as _Cog
 
-from . import Bot
+from .bot import Bot
 
 
 class Cog(_Cog):
