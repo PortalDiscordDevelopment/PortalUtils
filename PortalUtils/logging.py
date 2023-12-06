@@ -1,7 +1,8 @@
 import inspect
 
-from discord import Color, DMChannel, Embed, Guild
+from discord import Color, DMChannel, Embed, Guild, Interaction, app_commands
 from discord.ext import commands
+from discord.utils import utcnow
 from DPyUtils import Context
 
 from .bot import Bot
@@ -41,7 +42,8 @@ Total Guilds: `{len(self.bot.guilds)}`""",
             )
         )
 
-    @commands.Cog.listener("on_command")
+    # @commands.Cog.listener("on_command")
+    # TODO: figure out what's going on with this; clean it up for only slash commands
     async def command_logs(self, ctx: Context):
         log = self.bot.get_channel(self.bot.command_logs)
         if log is None:
@@ -87,6 +89,25 @@ Message: [`{ctx.message.id}`]({ctx.message.jump_url})
 Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`""",
                 color=Color.dark_green(),
             )
+        )
+
+    @commands.Cog.listener("on_app_command")
+    async def app_command_logs(self, interaction: Interaction, command: app_commands.Command):
+        log = self.bot.get_channel(self.bot.command_logs)
+        if log is None:
+            self.bot.extra_events["on_app_command"].remove(self.app_command_logs)
+            return
+        await log.send(
+            embed=Embed(
+                title="Command Ran",
+                description=f"""
+User: `{interaction.user}` (`{interaction.user.id}`)
+Guild: `{interaction.guild}`{f" (`{interaction.guild.id}`)" if interaction.guild else ''}
+Channel: [`{f"#{interaction.channel}" if not isinstance(interaction.channel, DMChannel) else "DM or Slash-Only Context"}`]({interaction.channel.jump_url}) (`{interaction.channel.id}`)
+Command: `/{command.qualified_name} {' '.join(f"{k}:{v}" for k, v in interaction.namespace.__dict__.items())}`""",
+                color=Color.dark_green(),
+                timestamp=utcnow(),
+            ).set_footer(icon_url=interaction.user.display_avatar.url)
         )
 
     @commands.Cog.listener("on_command_error")
