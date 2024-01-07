@@ -12,7 +12,4 @@ class CustomMinimalHelp(commands.MinimalHelpCommand):
 
 
 async def setup(bot: Bot):
-    bot.help_command = CustomMinimalHelp(
-        command_attrs={"name": "help"},
-        verify_checks=False,
-    )
+    bot.help_command = CustomMinimalHelp(command_attrs={"name": "help"}, verify_checks=False)
