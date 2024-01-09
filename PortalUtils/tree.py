@@ -1,14 +1,19 @@
 import traceback
 
-from discord import AppCommandType, Interaction, InteractionType
+from discord import AppCommandType, Interaction, InteractionType, NotFound
 from discord.app_commands import CommandTree
 from discord.app_commands.errors import CheckFailure, CommandInvokeError
 
 
 class CommandTree(CommandTree):
     async def on_error(self, interaction: Interaction, error: Exception):
-        await interaction.send("An error occured.")
-        await interaction.send(error, ephemeral=True)
+        try:
+            await interaction.send("An error occured.")
+            await interaction.send(error, ephemeral=True)
+        except NotFound as e:
+            await interaction.channel.send(
+                "An error occured, and the original interaction could not be found.\n{error}"
+            )
         if isinstance(error, CommandInvokeError):
             error = error.original
         tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
