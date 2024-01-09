@@ -17,7 +17,7 @@ class CommandTree(CommandTree):
         print(tb)
         if cid := getattr(interaction.client, "error_logs", 0):
             await interaction.client.get_channel(cid).send(
-                f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace}```py\n{tb}```"
+                f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace} ```py\n{tb}```"
             )
 
     async def interaction_check(self, interaction: Interaction) -> None:

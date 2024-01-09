@@ -26,7 +26,7 @@ class Logging(commands.Cog):
             return
         jl, clr = ("Joined", "green") if self.bot.get_guild(guild.id) else ("Left", "red")
         owner = guild.owner
-        if not owner:
+        if not owner and guild.owner_id is not None:
             owner = await self.bot.fetch_user(guild.owner_id)
         await log.send(
             embed=Embed(
@@ -35,7 +35,7 @@ class Logging(commands.Cog):
                 description=f"""
 Guild Name: `{guild}`
 Guild ID: `{guild.id}`
-Owner: `{owner}` (`{owner.id}`){f'''
+Owner: `{owner}` (`{guild.owner_id}`){f'''
 Humans: `{len([m for m in guild.members if not m.bot])}`
 Bots: `{len([m for m in guild.members if m.bot])}`''' if self.bot.intents.members else ''}
 Total Guilds: `{len(self.bot.guilds)}`""",
