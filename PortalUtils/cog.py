@@ -11,9 +11,11 @@ class Cog(_Cog):
         self.bot = bot
 
     def t(self, key: str, interaction: Interaction, /, **kwargs) -> str:
-        module = interaction.command.callback.__module__.split(".")[-1]
-        fn = (interaction.command.extras.get("i18n_key", None) or interaction.command.callback.__name__).split("_")
-        full_key = ".".join((module, *fn, key))
+        module = interaction.command.callback.__module__.split(".")[-1]  # __module__ is cogs.*
+        cmd = interaction.command.callback.__name__
+        if (key := interaction.command.extras.get("i18n_key", None)) is not None:
+            cmd = key
+        full_key = ".".join((module, *cmd.split("_"), key))
         return self.bot.t(full_key, locale=interaction.locale, **kwargs)
 
 
