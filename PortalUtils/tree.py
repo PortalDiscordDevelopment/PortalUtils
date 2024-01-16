@@ -1,8 +1,11 @@
 import traceback
+from logging import getLogger
 
 from discord import AppCommandType, Interaction, InteractionType, NotFound
 from discord.app_commands import CommandTree
 from discord.app_commands.errors import CheckFailure, CommandInvokeError
+
+log = getLogger(__name__)
 
 
 class CommandTree(CommandTree):
@@ -19,7 +22,7 @@ class CommandTree(CommandTree):
         tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
         if isinstance(error, (CheckFailure, ValueError)):
             tb = f"{error.__class__.__name__}: {error}"
-        print(tb)
+        log.error(tb)
         if cid := getattr(interaction.client, "error_logs", 0):
             await interaction.client.get_channel(cid).send(
                 f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace} ```py\n{tb}```"
