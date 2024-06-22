@@ -4,6 +4,10 @@ from .bot import Bot
 
 
 class CustomMinimalHelp(commands.MinimalHelpCommand):
+    """
+    A subclass of `discord.ext.commands.MinimalHelpCommand` that sends the help message as a single embed.
+    """
+
     async def send_pages(self):
         desc = ""
         for page in self.paginator.pages:

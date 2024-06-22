@@ -1,16 +1,20 @@
-from discord import (
-    ButtonStyle,
-    Embed,
-    Interaction,
-    Message,
-    SelectOption,
-    TextChannel,
-    ui,
-)
+from __future__ import annotations
+
+from typing import Literal
+
+from discord import ButtonStyle, Embed, Interaction, Message, SelectOption, abc, ui
+
+PAGE_RELATION = Literal["first"] | Literal["previous"] | Literal["next"] | Literal["last"]
 
 
 class PaginatorButton(ui.Button):
-    def __init__(self, f, **kwargs):
+    """
+    Move to a specific page in the paginator.
+    """
+
+    f: PAGE_RELATION
+
+    def __init__(self, f: PAGE_RELATION, **kwargs):
         super().__init__(**kwargs)
         self.f = f
 
@@ -19,17 +23,21 @@ class PaginatorButton(ui.Button):
 
 
 class PaginatorButtons(ui.View):
-    def __init__(self, paginator, **kwargs):
+    """
+    A paginator view with buttons to move to the first, previous, next, and last pages.
+    """
+
+    def __init__(self, paginator: Paginator, **kwargs):
         self.paginator = paginator
         super().__init__(**kwargs)
-        mapping = [
+        mapping: list[tuple[str, PAGE_RELATION, int]] = [
             ("⏮", "first", 1),
             ("◀", "previous", self.paginator.current_page - 1),
             ("▶", "next", self.current_page + 1),
             ("⏭", "last", self.paginator.num_pages),
         ]
         for e, f, p in mapping:
-            self.add_item(PaginatorButton(f, label=p, emoji=e, style=ButtonStyle.blurple))
+            self.add_item(PaginatorButton(f, label=str(p), emoji=e, style=ButtonStyle.blurple))
         self._children.insert(
             2,
             ui.Button(
@@ -41,7 +49,11 @@ class PaginatorButtons(ui.View):
 
 
 class PaginatorButtonsGoTo(PaginatorButtons):
-    def __init__(self, paginator, **kwargs):
+    """
+    A paginator view with buttons to move to the first, previous, next, and last pages, and a select menu to go to a specific page.
+    """
+
+    def __init__(self, paginator: Paginator, **kwargs):
         super().__init__(paginator, **kwargs)
         self.add_item(self.GoTo(self.paginator))
 
@@ -56,6 +68,21 @@ class PaginatorButtonsGoTo(PaginatorButtons):
 
 
 class Paginator:
+    """
+    A paginator class.
+
+    Parameters
+    ----------
+    num_lines: int
+        The number of lines to show per page.
+    delimiter: str
+        The delimiter to use when joining lines.
+    max_len: int
+        The maximum length of the message content.
+    timeout: float
+        The timeout for the paginator.
+    """
+
     def __init__(
         self,
         num_lines: int,
@@ -68,39 +95,79 @@ class Paginator:
         self.max_len = max_len
         self.delimiter = delimiter
         self.message: Message
-        self.pages = [[]]
+        self.page: list[list[str]] = [[]]
         self.is_embed: bool = False
 
-    def add_line(self, line):
+    def add_line(self, line: str):
+        """
+        Add a line to the paginator.
+
+        Parameters
+        ----------
+        line: str
+            The line to add.
+        """
         if sum(map(len, self.pages)) + len(line) > self.max_len:
             self.pages.append([line])
         else:
             self.pages[-1].append(line)
 
-    async def show_page(self, page):
+    async def show_page(self, page: int):
+        """
+        Show a specific page in the paginator.
+
+        Parameters
+        ----------
+        page: int
+            The page to show.
+        """
         self.current_page = page
         k = "embed" if self.is_embed else "content"
         await self.message.edit(**{k: self.pages[self.current_page - 1]})
 
     async def show_next_page(self):
+        """
+        Show the next page in the paginator.
+        """
         await self.show_page(self.current_page + 1)
 
     async def show_previous_page(self):
+        """
+        Show the previous page in the paginator.
+        """
         await self.show_page(self.current_page - 1)
 
     async def show_first_page(self):
+        """
+        Show the first page in the paginator.
+        """
         await self.show_page(1)
 
     async def show_last_page(self):
+        """
+        Show the last page in the paginator.
+        """
         await self.show_page(len(self.pages))
 
-    async def send_to(self, channel: TextChannel):
+    async def send_to(self, destination: abc.Messageable):
+        """
+        Send the paginator to a messageable.
+
+        Parameters
+        ----------
+        destination: discord.abc.Messageable
+            The channel to send the paginator to.
+        """
         self.pages = [self.delimiter.join(page) for page in self.pages]
-        self.message = await channel.send(content=self.delimiter.join(self.pages[0]), view=PaginatorButtons(self))
+        self.message = await destination.send(content=self.delimiter.join(self.pages[0]), view=PaginatorButtons(self))
         return self.message
 
 
 class EmbedPaginator(Paginator):
+    """
+    A paginator that sends embeds.
+    """
+
     def __init__(
         self,
         num_lines: int,
@@ -116,7 +183,15 @@ class EmbedPaginator(Paginator):
         self.embed_cls = embed_cls
         self.embed_kwargs = embed_kwargs or {}
 
-    async def send_to(self, channel: TextChannel):
+    async def send_to(self, channel: abc.Messageable):
+        """
+        Send the paginator to a messageable.
+
+        Parameters
+        ----------
+        channel: discord.abc.Messageable
+            The channel to send the paginator to.
+        """
         self.pages = [self.embed_cls(description=self.delimiter.join(page), **self.embed_kwargs) for page in self.pages]
         self.message = await channel.send(embed=self.pages[0])
         return self.message

@@ -19,6 +19,14 @@ class Logging(commands.Cog):
     @commands.Cog.listener("on_guild_join")
     @commands.Cog.listener("on_guild_remove")
     async def guild_logs(self, guild: Guild):
+        """
+        Logs guild joins and leaves to the `guild_logs` channel.
+
+        Parameters
+        ----------
+        guild: Guild
+            The guild that was joined or left.
+        """
         log = self.bot.get_channel(self.bot.guild_logs)
         if log is None:
             self.bot.extra_events["on_guild_join"].remove(self.guild_logs)
@@ -45,6 +53,14 @@ Total Guilds: `{len(self.bot.guilds)}`""",
     # @commands.Cog.listener("on_command")
     # TODO: figure out what's going on with this; clean it up for only slash commands
     async def command_logs(self, ctx: Context):
+        """
+        Logs message commands to the `command_logs` channel.
+
+        Parameters
+        ----------
+        ctx: Context
+            The command context.
+        """
         log = self.bot.get_channel(self.bot.command_logs)
         if log is None:
             self.bot.extra_events["on_command"].remove(self.command_logs)
@@ -93,6 +109,16 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
 
     @commands.Cog.listener("on_app_command")
     async def app_command_logs(self, interaction: Interaction, command: app_commands.Command):
+        """
+        Logs application commands to the `command_logs` channel.
+
+        Parameters
+        ----------
+        interaction: Interaction
+            The interaction that triggered the command.
+        command: app_commands.Command
+            The command that was triggered.
+        """
         log = self.bot.get_channel(self.bot.command_logs)
         if log is None:
             self.bot.extra_events["on_app_command"].remove(self.app_command_logs)
@@ -111,7 +137,17 @@ Command: `/{command.qualified_name} {' '.join(f"{k}:{v}" for k, v in interaction
         )
 
     @commands.Cog.listener("on_command_error")
-    async def error_logs(self, ctx, err):
+    async def error_logs(self, ctx: Context, err: Exception):
+        """
+        Prints command errors to the console.
+
+        Parameters
+        ----------
+        ctx: Context
+            The command context.
+        err: Exception
+            The error that occurred.
+        """
         print(ctx.channel, ctx.author, err)
 
 

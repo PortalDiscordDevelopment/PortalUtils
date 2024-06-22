@@ -15,21 +15,72 @@ for f in ["NO_UNDERSCORE", "HIDE", "FORCE_PAGINATOR"]:
 
 
 class Embed(Embed):
+    """
+    A subclass of discord.Embed with an optional default color.
+    Adds a default footer with the Portal Development copyright.
+    """
+
     _default_color: Union[Color, int]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._footer = {"text": "\u00a9 2022 Portal Development. All rights reserved - /info"}
+        self._footer = {"text": "\u00a9 2024 Portal Development. All rights reserved - /info"}
         self.color = self.color or self._default_color  # pylint: disable=no-member
 
 
 class EEmbed(Embed):
+    """
+    A subclass of Embed with a default color of red.
+    """
+
     def __init__(self, **kwargs):
         self._default_color = Color.red()
         super().__init__(**kwargs)
 
 
 class PortalBotMixin:
+    """
+    A mixin for Bot and AutoShardedBot.
+
+    Parameters
+    ----------
+    color: Union[Color, int]
+        The default color for Embeds.
+    error_logs: int
+        The channel ID for error logs.
+    guild_logs: int
+        The channel ID for guild logs.
+    command_logs: int
+        The channel ID for command logs.
+    **kwargs
+        See `discord.ext.commands.Bot` or `discord.ext.commands.AutoShardedBot`.
+
+    Attributes
+    ----------
+    color: Union[Color, int]
+        The default color for Embeds.
+    error_logs: int
+        The channel ID for error logs.
+    guild_logs: int
+        The channel ID for guild logs.
+    command_logs: int
+        The channel ID for command logs.
+    db: aiosqlite.Connection
+        The database connection.
+    session: aiohttp.ClientSession
+        The aiohttp session.
+    Embed: Embed
+        The Embed class.
+    EEmbed: Embed
+        The error Embed class.
+
+    Methods
+    -------
+    start(*args, **kwargs)
+        Loads extensions and starts the bot.
+    db_schema(*tables)
+        Returns the schema for the given tables."""
+
     def __init__(
         self,
         *args,
@@ -74,6 +125,14 @@ class PortalBotMixin:
                 await super().start(*args, **kwargs)
 
     async def db_schema(self, *tables):
+        """
+        Shows the SQLite schema for the given tables.
+        If no tables are given, shows the schema for all tables.
+
+        Parameters
+        ----------
+        tables: str
+            The names of the tables to show the schema for."""
         if not hasattr(self, "db"):
             return "Bot has no active DB connection"
         schema = await (
@@ -87,8 +146,16 @@ class PortalBotMixin:
 
 
 class Bot(PortalBotMixin, commands.Bot):
+    """
+    A subclass of `discord.ext.commands.Bot` with some default extensions and utilities.
+    """
+
     pass
 
 
 class AutoShardedBot(PortalBotMixin, commands.AutoShardedBot):
+    """
+    A subclass of `discord.ext.commands.AutoShardedBot` with some default extensions and utilities.
+    """
+
     pass

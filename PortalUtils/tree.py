@@ -9,7 +9,21 @@ log = getLogger(__name__)
 
 
 class CommandTree(CommandTree):
+    """
+    A subclass of `discord.app_commands.CommandTree` with additional error handling and interaction checks.
+    """
+
     async def on_error(self, interaction: Interaction, error: Exception):
+        """
+        Handles errors that occur during command invocation and sends them to the `error_logs` channel.
+
+        Parameters
+        ----------
+        interaction: Interaction
+            The interaction that triggered the command.
+        error: Exception
+            The error that occurred.
+        """
         try:
             await interaction.send("An error occured.")
             await interaction.send(error, ephemeral=True)
@@ -28,13 +42,21 @@ class CommandTree(CommandTree):
                 f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace} ```py\n{tb}```"
             )
 
-    async def interaction_check(self, interaction: Interaction) -> None:
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        """
+        Optionally pre-defers the response to an interaction.
+
+        Parameters
+        ----------
+        interaction: Interaction
+            The interaction to check.
+        """
         defer = False
         if (
             interaction.type == InteractionType.application_command
             and getattr(interaction.command, "type", AppCommandType.chat_input) == AppCommandType.chat_input
         ):
-            command, options = self._get_app_command_options(interaction.data)
+            command, _ = self._get_app_command_options(interaction.data)
             defer = command.extras.get("defer", False)
         if defer:
             await interaction.response.defer(
