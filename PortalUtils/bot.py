@@ -2,16 +2,19 @@ import os
 from typing import Union
 
 import aiohttp
-import aiosqlite
-import jishaku
 from discord import Color, Embed
 from discord.ext import commands
 from DPyUtils import load_extensions
 
 from .tree import CommandTree
 
-for f in ["NO_UNDERSCORE", "HIDE", "FORCE_PAGINATOR"]:
-    setattr(jishaku.Flags, f, True)
+try:
+    import jishaku
+
+    for f in ["NO_UNDERSCORE", "HIDE", "FORCE_PAGINATOR"]:
+        setattr(jishaku.Flags, f, True)
+except ImportError:
+    jishaku = None
 
 
 class Embed(Embed):
@@ -97,7 +100,6 @@ class PortalBotMixin:
         self.guild_logs = guild_logs
         self.command_logs = command_logs
 
-        self.db: aiosqlite.Connection
         self.session: aiohttp.ClientSession
         self.Embed: Embed = Embed
         self.Embed._default_color = self.color
@@ -108,21 +110,15 @@ class PortalBotMixin:
             self,
             directories=[],
             extra_cogs=[
-                "jishaku",
+                "jishaku" if jishaku else None,
                 "PortalUtils.logging",
                 "PortalUtils.helpc",
                 "DPyUtils.ContextEditor2",
             ],
         )
-        if "data.db" in os.listdir() and not hasattr(self, "db"):
-            async with aiosqlite.connect("data.db") as db, aiohttp.ClientSession() as session:
-                self.db = db
-                self.session = session
-                await super().start(*args, **kwargs)
-        else:
-            async with aiohttp.ClientSession() as session:
-                self.session = session
-                await super().start(*args, **kwargs)
+        async with aiohttp.ClientSession() as session:
+            self.session = session
+            await super().start(*args, **kwargs)
 
     async def db_schema(self, *tables):
         """

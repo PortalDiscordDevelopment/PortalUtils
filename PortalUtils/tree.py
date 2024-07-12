@@ -25,12 +25,12 @@ class CommandTree(CommandTree):
             The error that occurred.
         """
         try:
-            await interaction.send("An error occured.")
+            await interaction.send(
+                "An error occured.", delete_after=2
+            )  # TODO: this should be ephemeral as often as possible; delete for now
             await interaction.send(error, ephemeral=True)
         except NotFound as e:
-            await interaction.channel.send(
-                "An error occured, and the original interaction could not be found.\n{error}"
-            )
+            await interaction.channel.send(f"An error occured, and the original interaction could not be found.\n{e}")
         if isinstance(error, CommandInvokeError):
             error = error.original
         tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
@@ -39,7 +39,8 @@ class CommandTree(CommandTree):
         log.error(tb)
         if cid := getattr(interaction.client, "error_logs", 0):
             await interaction.client.get_channel(cid).send(
-                f"{interaction.user} ran {interaction.command.qualified_name} in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace} ```py\n{tb}```"
+                # TODO: link this to command_logs. global command cache? revist
+                f"{interaction.user} ran `{interaction.command.qualified_name}` in {interaction.channel.mention} (`{interaction.guild_id}`)\n{interaction.namespace} ```py\n{tb}```"
             )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -61,5 +62,5 @@ class CommandTree(CommandTree):
         if defer:
             await interaction.response.defer(
                 thinking=True, ephemeral=True
-            )  # First followup ALWAYS matches state of defer!
+            )  # First followup ALWAYS matches state of defer! or does it.......
         return True

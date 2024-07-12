@@ -1,8 +1,8 @@
 import inspect
 
-from discord import Color, DMChannel, Embed, Guild, Interaction, app_commands
+from discord import Color, DMChannel, Embed, GroupChannel, Guild, Interaction, Locale, app_commands
 from discord.ext import commands
-from discord.utils import utcnow
+from discord.utils import get, utcnow
 from DPyUtils import Context
 
 from .bot import Bot
@@ -107,7 +107,7 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
             )
         )
 
-    @commands.Cog.listener("on_app_command")
+    @commands.Cog.listener("on_app_command")  # note: app_command event only exists in git@clari7744/disord.py
     async def app_command_logs(self, interaction: Interaction, command: app_commands.Command):
         """
         Logs application commands to the `command_logs` channel.
@@ -121,16 +121,29 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
         """
         log = self.bot.get_channel(self.bot.command_logs)
         if log is None:
-            self.bot.extra_events["on_app_command"].remove(self.app_command_logs)
+            # could self-destruct, but just exit until channel exists for now.
+            # self.bot.extra_events["on_app_command"].remove(self.app_command_logs)
             return
+
+        cmd_parts = [f"/{command.qualified_name}"]
+        for k, v in interaction.namespace.__dict__.items():
+            param = get(interaction.command.parameters, locale_name__message=k)
+            key = param.locale_name.extras.get("key", None)
+            if hasattr(self.bot, "t") and key is not None:
+                k = self.bot.t(key, locale=Locale.american_english)
+            cmd_parts.append(f"{k}:{v}")
+
+        ch_name = (
+            "DM Channel" if isinstance(interaction.channel, (DMChannel, GroupChannel)) else f"#{interaction.channel}"
+        )
+
         await log.send(
             embed=Embed(
                 title="Command Ran",
-                description=f"""
-User: `{interaction.user}` (`{interaction.user.id}`)
-Guild: `{interaction.guild}`{f" (`{interaction.guild.id}`)" if interaction.guild else ''}
-Channel: [`{f"#{interaction.channel}" if not isinstance(interaction.channel, DMChannel) else "DM or Slash-Only Context"}`]({interaction.channel.jump_url}) (`{interaction.channel.id}`)
-Command: `/{command.qualified_name} {' '.join(f"{k}:{v}" for k, v in interaction.namespace.__dict__.items())}`""",
+                description=f"User: `{interaction.user}` (`{interaction.user.id}`)\n"
+                f"Guild: `{interaction.guild}`{f' (`{interaction.guild.id}`)' if interaction.guild else ''}\n"
+                f"Channel: [`{ch_name}`]({interaction.channel.jump_url}) (`{interaction.channel.id}`)\n"
+                f"Command: `{' '.join(cmd_parts)}`\n",
                 color=Color.dark_green(),
                 timestamp=utcnow(),
             ).set_footer(icon_url=interaction.user.display_avatar.url)
