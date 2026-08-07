@@ -7,6 +7,10 @@ from DPyUtils import Context
 
 from .bot import Bot
 
+from logging import getLogger
+
+log = getLogger(__name__)
+
 
 class Logging(commands.Cog):
     """
@@ -152,7 +156,7 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
     @commands.Cog.listener("on_command_error")
     async def error_logs(self, ctx: Context, err: Exception):
         """
-        Prints command errors to the console.
+        Logs command errors to the error log.
 
         Parameters
         ----------
@@ -161,7 +165,8 @@ Command: `{cmd} {' '.join(':'.join(a) for a in zip(sig, map(str, newargs)))}`"""
         err: Exception
             The error that occurred.
         """
-        print(ctx.channel, ctx.author, err)
+        log.error(f"An error occurred in #{ctx.channel} by @{ctx.author} on {ctx.command}")
+        log.error(err)
 
 
 async def setup(bot: Bot):
